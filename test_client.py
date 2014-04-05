@@ -1,6 +1,7 @@
 import sys
 
 from P2PNode import P2PNode
+from P2PMessage import Message
 
 def main(sys_args):
     hostname = sys_args[0]
@@ -15,10 +16,7 @@ def main(sys_args):
     while True:
         nodeId = int(raw_input("enter nodeId:"))
         s = raw_input("enter the message")
-        message = {
-            "message_type": "shell_command"
-        }
-        message["content"] = s
+        message = Message("shell_message", p2pnode.mynode.nodeId, payload = s)
         p2pnode._send_message(nodeId, message)
 
 if __name__ == "__main__":

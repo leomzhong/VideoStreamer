@@ -1,5 +1,7 @@
-import json
 import pickle
+
+from P2PMessage import Message
+
 
 def loadNode(encoded):
     return pickle.loads(str(encoded))
@@ -59,9 +61,8 @@ class ClientNode(object):
         if index != -1 and loadNode(machine_list[index]).nodeId == self.nodeId:
             machine_list.pop(index)    
     
-    def _sendmessage(self, message, sock=None, source_id=None, lock=None):
-        message["source_id"] = source_id
-        encoded = json.dumps(message)
+    def _sendmessage(self, message, sock=None, lock=None):
+        encoded = message.dump()
         if lock:
             lock.acquire()
             sock.sendto(encoded, self.address())
@@ -70,13 +71,9 @@ class ClientNode(object):
             sock.sendto(encoded, self.address())
 
     def keep_alive(self, socket=None, source_id=None, lock=None):
-        message = {
-            "message_type" : "keepalive"
-        }
-        self._sendmessage(message, socket, source_id, lock)
+        message = Message("keepalive", source_id)
+        self._sendmessage(message, socket, lock)
         
     def keep_alive_reply(self, socket=None, source_id=None, lock=None):
-        message = {
-            "message_type" : "keepalive_reply"
-        }
-        self._sendmessage(message, socket, source_id, lock)
+        message = Message("keepalive_reply", source_id)
+        self._sendmessage(message, socket, lock)

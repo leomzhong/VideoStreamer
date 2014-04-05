@@ -1,12 +1,9 @@
 import SocketServer
-import json
-from pprint import pprint
 import socket
-import sys
 import threading
 import time
-import traceback
 
+from P2PMessage import loadMessage
 from P2PDHT import P2PDHT
 from node import ClientNode
 from node import loadNode
@@ -27,25 +24,22 @@ class RequestHandler(SocketServer.BaseRequestHandler):
     def handle(self):
         try:
             data = self.request.recv(1024)
-            message = json.loads(data)
-            message_type = message["message_type"]
-            source_id = message["source_id"]
+            message = loadMessage(data)
+            message_type = message.message_type
+            source_id = message.source_id
             if message_type == "keepalive":
 #                print "We get a pint message from " + str(source_id)
                 self.handle_keepalive(self.request, message)
-            elif message_type == "keepalive_reply":
-#                print "We get a pong message from " + str(source_id)
-                pass
             else:
                 print "We get a message from " + str(source_id)
-                pprint(message)
+                print(message.toString())
         except KeyError, ValueError:
             pass
     
     def handle_keepalive(self, client_socket, message):
         # send back pong message or do nothing
         client_host, client_port = self.client_address
-        nodeId = message["source_id"]
+        nodeId = message.source_id
         replyNode = ClientNode(client_host, client_port, nodeId)
         replyNode.keep_alive_reply(client_socket, self.server.nodeId, self.server.send_lock)
 
@@ -174,7 +168,7 @@ class P2PNode(object):
             print "There is no such a node with nodeId " + str(target_nodeId)
             return
         s = self._create_socket(targetnode.address())
-        targetnode._sendmessage(message, s, self.mynode.nodeId)
+        targetnode._sendmessage(message, s)
             
         
             
