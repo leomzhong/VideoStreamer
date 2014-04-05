@@ -9,6 +9,7 @@ from ClientNode import ClientNode
 from ClientNode import loadNode
 from P2PDHT import P2PDHT
 from P2PMessage import loadMessage
+from P2PMessage import Message
 
 
 nodeIdMax = 1000
@@ -35,7 +36,9 @@ class RequestHandler(SocketServer.BaseRequestHandler):
             else:
                 print "We get a message from " + str(source_id)
                 print(message.toString())
-        except KeyError, ValueError:
+                if message_type == "getload":
+                    self.handle_getload(self.request, message)
+        except:
             pass
     
     def handle_keepalive(self, client_socket, message):
@@ -44,6 +47,12 @@ class RequestHandler(SocketServer.BaseRequestHandler):
         nodeId = message.source_id
         replyNode = ClientNode(client_host, client_port, nodeId)
         replyNode.keep_alive_reply(client_socket, self.server.nodeId, self.server.send_lock)
+        
+    def handle_getload(self, client_socket, message):
+        client_host, client_port = self.client_address
+        nodeId = message.source_id
+        replyNode = ClientNode(client_host, client_port, nodeId)
+        replyNode.getload_reply(client_socket, self.server.nodeId, self.server.send_lock)
 
 class RequestServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
     def __init__(self, host_address, handler_cls, nodeId):
@@ -170,16 +179,39 @@ class P2PNode(object):
         else:
             return loadNode(machine_list[my_pos + 1])
     
-    def _send_message(self, target_nodeId, message):
-        # TODO: Get a distributed lock
-        machine_list = self.sys_dht.get("machine_list")
-        pos = self.mynode.binarySearch(machine_list, target_nodeId)
-        targetnode = loadNode(machine_list[pos])
-        if targetnode.nodeId != target_nodeId:
+    # Return the send_socket back in case outside function need to receive something
+    def _send_message(self, target_nodeId, message, send_socket=None):
+        targetNode = self._getNodeById(target_nodeId)
+        if not targetNode:
             print "There is no such a node with nodeId " + str(target_nodeId)
             return
-        s = self._create_socket(targetnode.address())
-        targetnode._sendmessage(message, s)
+        if not send_socket:
+            send_socket = self._create_socket(targetNode.address())
+        targetNode._sendmessage(message, send_socket)
+        return send_socket
+        
+    def _getNodeById(self, target_nodeId):
+        # TODO: Get distributed lock
+        machine_list = self.sys_dht.get("machine_list")
+        pos = self.mynode.binarySearch(machine_list, target_nodeId)
+        # TODO: Release distributed lock
+        targetnode = loadNode(machine_list[pos])
+        if targetnode.nodeId != target_nodeId:
+            return None
+        else:
+            return targetnode
+    
+    # Public APIs
+    def getNodeLoad(self, target_nodeId):
+        message = Message("getload", self.mynode.nodeId)
+        send_socket = self._send_message(target_nodeId, message)
+        replyData = send_socket.recv(1024)
+        replyMessage = loadMessage(replyData)
+        print(replyMessage.toString())
+        return int(replyMessage.payload)
+        
+        
+        
             
         
             

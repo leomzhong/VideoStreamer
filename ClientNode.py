@@ -77,3 +77,7 @@ class ClientNode(object):
     def keep_alive_reply(self, socket=None, source_id=None, lock=None):
         message = Message("keepalive_reply", source_id)
         self._sendmessage(message, socket, lock)
+        
+    def getload_reply(self, socket=None, source_id=None, lock=None):
+        message = Message("getload_reply", source_id, payload = self.currentLoad)
+        self._sendmessage(message, socket, lock)

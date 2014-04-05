@@ -16,9 +16,15 @@ def main(sys_args):
     p2pnode = P2PNode(hostname, hostport, know_host=knowhost, know_port = knowport)
     while True:
         nodeId = int(raw_input("enter nodeId:"))
+        message_type = raw_input("enter message_type")
         s = raw_input("enter the message")
-        message = Message("shell_message", p2pnode.mynode.nodeId, payload = s)
-        p2pnode._send_message(nodeId, message)
+        
+        # Testing getload function
+        if message_type == "getload":
+            p2pnode.getNodeLoad(nodeId)
+        else:
+            message = Message(message_type, p2pnode.mynode.nodeId, payload = s)
+            p2pnode._send_message(nodeId, message)
 
 if __name__ == "__main__":
     main(sys.argv[1:])
