@@ -1,12 +1,14 @@
 import SocketServer
+import os
+import random
 import socket
 import threading
 import time
 
-from P2PMessage import loadMessage
+from ClientNode import ClientNode
+from ClientNode import loadNode
 from P2PDHT import P2PDHT
-from node import ClientNode
-from node import loadNode
+from P2PMessage import loadMessage
 
 
 nodeIdMax = 1000
@@ -65,6 +67,9 @@ class P2PNode(object):
     
     # Start procedure:  
     def __init__(self, host, port, nodeId=None, know_host=None, know_port=0):
+        if not nodeId:
+            nodeId = self._generate_nodeId()
+            
         debug("host is:" + host)
         debug("port is:" + str(port))
         debug("nodeId is:" + str(nodeId))
@@ -88,8 +93,9 @@ class P2PNode(object):
         if self.sys_dht.has_key("machine_list"):
             machine_list = self.sys_dht.get("machine_list")
         
-        if self.mynode.list_contains_myself(machine_list):
-            print "We are holding a duplicate nodeId, We need to handle this!!"
+        while self.mynode.list_contains_myself(machine_list):
+            self.mynode.nodeId = self._generate_nodeId()
+            print "We are holding a duplicate nodeId, changing id to " + str(self.mynode.nodeId)
         
         my_pos = self.mynode.addToList(machine_list)
         self.sys_dht.put("machine_list", machine_list)
@@ -108,6 +114,11 @@ class P2PNode(object):
             print "Cannot create socket to " + str(address)
             s = None
         return s
+    
+    def _generate_nodeId(self):
+        global nodeIdMax
+        random.seed(os.urandom(8))
+        return int(random.random() * nodeIdMax)
         
     # KeepAlive thread logic    
     def _KeepAliveThread(self):
