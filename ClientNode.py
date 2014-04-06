@@ -25,6 +25,9 @@ class ClientNode(object):
     def address(self):
         return (self.host, self.server_port)
     
+    def getname(self):
+        return "nodename" + str(self.nodeId)
+    
     def dump(self):
         return pickle.dumps(self)
     
@@ -59,7 +62,9 @@ class ClientNode(object):
     def removeFromList(self, machine_list):
         index = self.binarySearch(machine_list, self.nodeId)
         if index != -1 and loadNode(machine_list[index]).nodeId == self.nodeId:
-            machine_list.pop(index)    
+            machine_list.pop(index) 
+        else:
+            print "removeFromList: you are not in the list!!!"   
     
     def _sendmessage(self, message, sock=None, lock=None):
         encoded = message.dump()

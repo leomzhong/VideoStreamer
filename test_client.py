@@ -14,15 +14,36 @@ def main(sys_args):
         knowhost = sys_args[2]
         knowport = int(sys_args[3])
     p2pnode = P2PNode(hostname, hostport, know_host=knowhost, know_port = knowport)
+    
     while True:
-        nodeId = int(raw_input("enter nodeId:"))
-        message_type = raw_input("enter message_type")
-        s = raw_input("enter the message")
+        command = raw_input("enter command:")
+        if command == "message":
+            nodeId = int(raw_input("enter nodeId:"))
+            message_type = raw_input("enter message_type")
+            s = raw_input("enter the message:")
+        else:
+            message_type = command
+            s = raw_input("enter arguments:")
         
         # Testing getload function
         if message_type == "getload":
             p2pnode.getNodeLoad(nodeId)
-        else:
+        # Testing upload movie
+        elif message_type == "upload":
+            words = s.split()
+            p2pnode.uploadMovie(words[0], words[1])
+        # Testing remove movie
+        elif message_type == "remove":
+            p2pnode.removeMovie(s)
+        # Testing get movie list:
+        elif message_type == "getmovies":
+            print("movies:" + "\t".join(p2pnode.getMovieList()))
+        # Testing get node list of a movie
+        elif message_type == "getmovienode":
+            print("nodes for movie " + s + ":" + "\t".join(p2pnode.getNodeListOfMovie(s)))
+        elif message_type == "getnodemovie":
+            print("movies on mynode is:" + "\t".join(p2pnode.getMoviesOnANode(p2pnode.mynode.nodeId)))
+        elif command == "message":
             message = Message(message_type, p2pnode.mynode.nodeId, payload = s)
             p2pnode._send_message(nodeId, message)
 

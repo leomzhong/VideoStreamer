@@ -66,6 +66,7 @@ class P2PNode(object):
     mynode = None
     
     # map of the movies to local filename
+    movietable_lock = None
     local_movie_table = {}
     
     # My request server
@@ -84,6 +85,8 @@ class P2PNode(object):
         debug("nodeId is:" + str(nodeId))
         debug("know_host is:" + str(know_host))
         debug("know_host_port is:" + str(know_port))
+        
+        self.movietable_lock = threading.Lock()
         
         self.mynode = ClientNode(host, port, nodeId)
         self.request_server = RequestServer((host, port), RequestHandler, nodeId)
@@ -152,10 +155,10 @@ class P2PNode(object):
                 except Exception, e:
                     print("Something's wrong with %s. Exception type is %s" % (target_address, e))
                     print "Node " + str(targetNode.nodeId) + " is dead"
-                    self._nodeDead(targetNode)
+                    self._removeNode(targetNode)
             time.sleep(keepalive_period)
         
-    def _nodeDead(self, deadnode):
+    def _removeNode(self, deadnode):
         # Just delete the node info (including movies) in DHT
         # TODO: For now, just delete the node
         # Get the distributed lock
@@ -201,9 +204,127 @@ class P2PNode(object):
         else:
             return targetnode
     
+    # TODO: Need to hold distributed lock on "movies" to call this function
+    def _getMovieTable(self):
+        movie_table = self.sys_dht.get("movies")
+        if not movie_table:
+            movie_table = {}
+            self.sys_dht.put("movies", movie_table)
+        return movie_table
+
+    # TODO: Need to hold distributed lock on "movies" to call this function
+    def _updateMovieTable(self, new_table):
+        self.sys_dht.put("movies", new_table)
+        
+    # TODO: Need to hold distributed lock on nodename to call this function
+    def _getMovieListOnNode(self, nodeId):
+        nodename = "nodename" + str(nodeId)
+        movie_list = self.sys_dht.get(nodename)
+        if not movie_list:
+            movie_list = []
+        return movie_list
+    
+    # TODO: Need to hold distributed lock on movie_name to call this function
+    def _addNodeToMovie(self, movie_name, new_node):
+        movie_table = self._getMovieTable()
+        node_list = movie_table.get(movie_name)
+        if not node_list:
+            node_list = []
+        node_list.append(new_node.dump())
+        movie_table[movie_name] = node_list
+        self._updateMovieTable(movie_table)
+    
+    # TODO: Need to hold distributed lock on movie_name to call this function
+    def _removeNodeFromMovie(self, movie_name, node):
+        movie_table = self._getMovieTable()
+        if not movie_table.has_key(movie_name):
+            print "_removeNodeFromMovie: there is no movie " + movie_name
+            return
+        node_list = movie_table.get(movie_name)
+        node.removeFromList(node_list)
+        if len(node_list) == 0:
+            del movie_table[movie_name]
+        else:
+            movie_table[movie_name] = node_list
+        self._updateMovieTable(movie_table)
+    
+    # TODO: Need to hold distributed lock on movie_name to call this function
+    def _addMovieToNode(self, movie_name):
+        nodename = self.mynode.getname()
+        movie_list = self.sys_dht.get(nodename)
+        if not movie_list:
+            movie_list = []
+        movie_list.append(movie_name)
+        self.sys_dht.put(self.mynode.getname(), movie_list)
+    
+    # TODO: Need to hold distributed lock on movie_name to call this function
+    def _removeMovieFromNode(self, movie_name):
+        nodename = self.mynode.getname()
+        movie_list = self.sys_dht.get(nodename)
+        if not movie_list:
+            print "_remoeMovieFromNode: there is no movie list for node: " + self.mynode.getname()
+        try:
+            movie_list.remove(movie_name)
+        except:
+            print "_removeMovieFromNode: You don't have this movie"
+        self.sys_dht.put(movie_name, movie_list)
+    
     # Public APIs
+    
+    # Myself leave the system
+    def leave(self):
+        # It's the same as myself is dead
+        self._removeNode(self.mynode)
+        
+    def uploadMovie(self, movie_name, local_filename):
+        self.movietable_lock.acquire()
+        if self.local_movie_table.has_key(movie_name):
+            print "You already has movie " + movie_name + " uploaded"
+            return False
+        
+        self.local_movie_table[movie_name] = local_filename
+        self.movietable_lock.release()
+        # TODO: Need to hold distributed lock on "movies" and movie_name
+        self._addMovieToNode(movie_name)
+        self._addNodeToMovie(movie_name, self.mynode)
+        return True
+        
+    def removeMovie(self, movie_name):
+        self.movietable_lock.acquire()
+        if not self.local_movie_table.has_key(movie_name):
+            print "You don't have " + movie_name + " in your movie table"
+            return False
+        # TODO: Need to hold distributed lock on "movies" and movie_name
+        del self.local_movie_table[movie_name]
+        self.movietable_lock.release()
+        self._removeNodeFromMovie(movie_name, self.mynode)
+        self._removeMovieFromNode(movie_name)
+        return True
+
+    def getMovieList(self):
+        # TODO: Need to hold the distributed lock on "movies"
+        movie_table = self._getMovieTable()
+        return movie_table.keys()
+
+    def getNodeListOfMovie(self, movie_name):
+        # TODO: Need to hold the distributed lock on "movies"
+        movie_table = self._getMovieTable()
+        node_list = []
+        if movie_table.has_key(movie_name):
+            node_list = movie_table.get(movie_name)
+        result = []
+        for node in node_list:
+            tmpNode = loadNode(node)
+            result.append(str(tmpNode.nodeId))
+        return result
+    
+    def getMoviesOnANode(self, nodeId):
+        # TODO: Need to hold the distributed lock on nodename
+        return self._getMovieListOnNode(nodeId)
+        
     def getNodeLoad(self, target_nodeId):
         message = Message("getload", self.mynode.nodeId)
+        # TODO: The node may already dead here
         send_socket = self._send_message(target_nodeId, message)
         replyData = send_socket.recv(1024)
         replyMessage = loadMessage(replyData)
