@@ -8,8 +8,8 @@ import time
 from ClientNode import ClientNode
 from ClientNode import loadNode
 from P2PDHT import P2PDHT
-from P2PMessage import loadMessage
 from P2PMessage import Message
+from P2PMessage import loadMessage
 
 
 nodeIdMax = 1000
@@ -31,13 +31,15 @@ class RequestHandler(SocketServer.BaseRequestHandler):
             message_type = message.message_type
             source_id = message.source_id
             if message_type == "keepalive":
-#                print "We get a pint message from " + str(source_id)
+                print "We get a pint message from " + str(source_id)
                 self.handle_keepalive(self.request, message)
             else:
                 print "We get a message from " + str(source_id)
                 print(message.toString())
                 if message_type == "getload":
                     self.handle_getload(self.request, message)
+                elif message_type == "video_start":
+                    self.handle_start_stream(message)
         except:
             pass
     
@@ -53,6 +55,10 @@ class RequestHandler(SocketServer.BaseRequestHandler):
         nodeId = message.source_id
         replyNode = ClientNode(client_host, client_port, nodeId)
         replyNode.getload_reply(client_socket, self.server.nodeId, self.server.send_lock)
+    
+    def handle_start_stream(self, message):
+        print "inside handle_start_stream function"
+        # TODO: Need to be implemented
 
 class RequestServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
     def __init__(self, host_address, handler_cls, nodeId):
@@ -183,14 +189,21 @@ class P2PNode(object):
             return loadNode(machine_list[my_pos + 1])
     
     # Return the send_socket back in case outside function need to receive something
-    def _send_message(self, target_nodeId, message, send_socket=None):
+    def _send_message_by_id(self, target_nodeId, message, send_socket=None):
         targetNode = self._getNodeById(target_nodeId)
         if not targetNode:
             print "There is no such a node with nodeId " + str(target_nodeId)
             return
+        return self._send_message_by_node(targetNode, message, send_socket)
+    
+    def _send_message_by_node(self, target_node, message, send_socket=None):
         if not send_socket:
-            send_socket = self._create_socket(targetNode.address())
-        targetNode._sendmessage(message, send_socket)
+            send_socket = self._create_socket(target_node.address())
+        try:
+            target_node._sendmessage(message, send_socket)
+        except:
+            print "Fail to send message to node " + str(target_node.nodeId)
+            return None
         return send_socket
         
     def _getNodeById(self, target_nodeId):
@@ -268,6 +281,15 @@ class P2PNode(object):
         except:
             print "_removeMovieFromNode: You don't have this movie"
         self.sys_dht.put(movie_name, movie_list)
+        
+    # TODO: Need to hold the distributed lock on "movies" and movie_name to call this function
+    # Notice: the nodes in returned list need to be load
+    def _getNodeListOfMovie(self, movie_name):
+        movie_table = self._getMovieTable()
+        node_list = []
+        if movie_table.has_key(movie_name):
+            node_list = movie_table.get(movie_name)
+        return node_list
     
     # Public APIs
     
@@ -308,10 +330,7 @@ class P2PNode(object):
 
     def getNodeListOfMovie(self, movie_name):
         # TODO: Need to hold the distributed lock on "movies"
-        movie_table = self._getMovieTable()
-        node_list = []
-        if movie_table.has_key(movie_name):
-            node_list = movie_table.get(movie_name)
+        node_list = self._getNodeListOfMovie(movie_name)
         result = []
         for node in node_list:
             tmpNode = loadNode(node)
@@ -325,11 +344,35 @@ class P2PNode(object):
     def getNodeLoad(self, target_nodeId):
         message = Message("getload", self.mynode.nodeId)
         # TODO: The node may already dead here
-        send_socket = self._send_message(target_nodeId, message)
+        send_socket = self._send_message_by_id(target_nodeId, message)
         replyData = send_socket.recv(1024)
         replyMessage = loadMessage(replyData)
         print(replyMessage.toString())
         return int(replyMessage.payload)
+    
+    def getMovieStream(self, movie_name, start_pos=0, port=0):
+        # TODO: Need to hold the distributed lock on moviename
+        node_list = self._getNodeListOfMovie(movie_name)
+        if len(node_list) == 0:
+            return False
+        
+        # TODO: For now, just randomly choose a node. Need to add load balance here
+        choice = random.randint(0, len(node_list) - 1)
+        chosen_node = loadNode(node_list[choice])
+        payload = {
+            "movie_name": movie_name, 
+            "start_pos": start_pos, 
+            "port": port
+        }
+        message = Message("video_start", self.mynode.nodeId, payload=payload)
+        send_socket = self._send_message_by_node(chosen_node, message)
+        if not send_socket:
+            print "getMovieStream: Failed to send out the request message"
+            return False
+        # TODO: Do we need to get some reply back?
+        return True
+        
+        
         
         
         

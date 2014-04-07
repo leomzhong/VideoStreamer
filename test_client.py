@@ -27,7 +27,7 @@ def main(sys_args):
         
         # Testing getload function
         if message_type == "getload":
-            p2pnode.getNodeLoad(nodeId)
+            p2pnode.getNodeLoad(int(s))
         # Testing upload movie
         elif message_type == "upload":
             words = s.split()
@@ -43,6 +43,8 @@ def main(sys_args):
             print("nodes for movie " + s + ":" + "\t".join(p2pnode.getNodeListOfMovie(s)))
         elif message_type == "getnodemovie":
             print("movies on mynode is:" + "\t".join(p2pnode.getMoviesOnANode(p2pnode.mynode.nodeId)))
+        elif message_type == "streammovie":
+            p2pnode.getMovieStream(words[0])
         elif command == "message":
             message = Message(message_type, p2pnode.mynode.nodeId, payload = s)
             p2pnode._send_message(nodeId, message)
