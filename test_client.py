@@ -5,6 +5,7 @@ from P2PMessage import Message
 
 def main(sys_args):
     if not sys_args or len(sys_args) < 2:
+        print("Unsufficient number of arguments")
         return
     hostname = sys_args[0]
     hostport = int(sys_args[1])
@@ -19,18 +20,19 @@ def main(sys_args):
         command = raw_input("enter command:")
         if command == "message":
             nodeId = int(raw_input("enter nodeId:"))
-            message_type = raw_input("enter message_type")
+            message_type = raw_input("enter message_type:")
             s = raw_input("enter the message:")
         else:
             message_type = command
             s = raw_input("enter arguments:")
+            words = s.split()
         
         # Testing getload function
         if message_type == "getload":
             p2pnode.getNodeLoad(int(s))
         # Testing upload movie
         elif message_type == "upload":
-            words = s.split()
+            #words = s.split()
             p2pnode.uploadMovie(words[0], words[1])
         # Testing remove movie
         elif message_type == "remove":
@@ -47,7 +49,7 @@ def main(sys_args):
             p2pnode.getMovieStream(words[0])
         elif command == "message":
             message = Message(message_type, p2pnode.mynode.nodeId, payload = s)
-            p2pnode._send_message(nodeId, message)
+            p2pnode._send_message_by_id(nodeId, message)
 
 if __name__ == "__main__":
     main(sys.argv[1:])

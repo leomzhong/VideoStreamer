@@ -10,7 +10,7 @@ from ClientNode import loadNode
 from P2PDHT import P2PDHT
 from P2PMessage import Message
 from P2PMessage import loadMessage
-
+from P2PStreamServer import StreamServer
 
 nodeIdMax = 1000
 recv_buffer_size = 4096
@@ -31,7 +31,7 @@ class RequestHandler(SocketServer.BaseRequestHandler):
             message_type = message.message_type
             source_id = message.source_id
             if message_type == "keepalive":
-                print "We get a pint message from " + str(source_id)
+                #print "We get a pint message from " + str(source_id)
                 self.handle_keepalive(self.request, message)
             else:
                 print "We get a message from " + str(source_id)
@@ -57,8 +57,12 @@ class RequestHandler(SocketServer.BaseRequestHandler):
         replyNode.getload_reply(client_socket, self.server.nodeId, self.server.send_lock)
     
     def handle_start_stream(self, message):
-        print "inside handle_start_stream function"
-        # TODO: Need to be implemented
+        print "[DBG_HANDLE_START_STREAM] Enter"
+        # TODO: Convert it to multitrheading
+        streamServer = StreamServer("127.0.0.1", 5000)
+        print "[DBG_HANDLE_START_STREAM] Enter"
+        streamServer.prepareStream()
+        streamServer.startStream()
 
 class RequestServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
     def __init__(self, host_address, handler_cls, nodeId):
@@ -299,9 +303,10 @@ class P2PNode(object):
         self._removeNode(self.mynode)
         
     def uploadMovie(self, movie_name, local_filename):
+        print "[DBG_UPLOADMOVIE], Enter with Args, movie_name: " + movie_name + ", local_filename: " + local_filename
         self.movietable_lock.acquire()
         if self.local_movie_table.has_key(movie_name):
-            print "You already has movie " + movie_name + " uploaded"
+            print "You already have movie " + movie_name + " uploaded"
             return False
         
         self.local_movie_table[movie_name] = local_filename
@@ -354,6 +359,7 @@ class P2PNode(object):
         # TODO: Need to hold the distributed lock on moviename
         node_list = self._getNodeListOfMovie(movie_name)
         if len(node_list) == 0:
+            print "getMovieStream: Movie: " + movie_name + " has not been uploaded yet."
             return False
         
         # TODO: For now, just randomly choose a node. Need to add load balance here
@@ -369,18 +375,8 @@ class P2PNode(object):
         if not send_socket:
             print "getMovieStream: Failed to send out the request message"
             return False
+        else:
+            print "[DBG]: Message sent to:  " + chosen_node.getname() 
+
         # TODO: Do we need to get some reply back?
         return True
-        
-        
-        
-        
-        
-            
-        
-            
-        
-        
-        
-        
-        

@@ -16,5 +16,4 @@ class Message:
         result += "source_id:" + str(self.source_id) + "\n"
         result += "flag:" + str(self.flag) + "\n"
         result += "payload:" + str(self.payload) + "\n"
-        return result
-    
+        return result 
