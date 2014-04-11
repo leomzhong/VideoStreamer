@@ -34,3 +34,10 @@ USAGE:
 6. get list of movie on local node:
 	command: getnodemovie
 	arguments: [not needed]
+
+7. Streaming:
+   Command: streammovie
+   Arguments: test_video2.mpeg 5000 127.0.0.1
+                 ^              ^       ^
+                 |              |       |
+              video name      port   receiver ip
