@@ -28,7 +28,8 @@ class StreamServer:
 
         self.server_str += "sync=false async=false udpsrc port=" +  str(self.host_port1) + " ! "
 
-        self.server_str += "rtpbin.recv_rtcp_sink_0 autoaudiosrc ! audioconvert ! amrnbenc ! rtpamrpay ! rtpbin.send_rtp_sink_1 rtpbin.send_rtp_src_1 ! queue ! "
+        #self.server_str += "rtpbin.recv_rtcp_sink_0 autoaudiosrc ! audioconvert ! amrnbenc ! rtpamrpay ! rtpbin.send_rtp_sink_1 rtpbin.send_rtp_src_1 ! queue ! "
+        self.server_str += "rtpbin.recv_rtcp_sink_0 decode. ! audioresample ! audioconvert ! amrnbenc ! rtpamrpay ! rtpbin.send_rtp_sink_1 rtpbin.send_rtp_src_1 ! queue ! "
 
         self.server_str += "udpsink host=" + self.client_ip + " port=" + str(self.client_port3) + " "
 
