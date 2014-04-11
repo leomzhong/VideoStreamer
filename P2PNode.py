@@ -65,10 +65,11 @@ class RequestHandler(SocketServer.BaseRequestHandler):
         streamServer.startStream()
 
 class RequestServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
-    def __init__(self, host_address, handler_cls, nodeId):
+    def __init__(self, host_address, handler_cls, nodeId, p2pnode):
         SocketServer.TCPServer.__init__(self, host_address, handler_cls)
         self.send_lock = threading.Lock()
         self.nodeId = nodeId
+        self.p2pnode = p2pnode
 
 class P2PNode(object):
     
@@ -99,7 +100,7 @@ class P2PNode(object):
         self.movietable_lock = threading.Lock()
         
         self.mynode = ClientNode(host, port, nodeId)
-        self.request_server = RequestServer((host, port), RequestHandler, nodeId)
+        self.request_server = RequestServer((host, port), RequestHandler, nodeId, self)
         # Check if I am the first node in DHT
         if know_host:
             self.sys_dht = P2PDHT(host, port + 1, know_host, know_port + 1)
