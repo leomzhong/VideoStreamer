@@ -12,7 +12,7 @@ from P2PMessage import Message
 from P2PMessage import loadMessage
 from P2PStreamServer import StreamServer
 from pprint import pprint
-
+from Bootstrapping import bootstrapping
 nodeIdMax = 1000
 recv_buffer_size = 4096
 keepalive_period = 5
@@ -105,6 +105,7 @@ class P2PNode(object):
     
     # Start procedure:  
     def __init__(self, host, port, nodeId=None, know_host=None, know_port=0):
+		boot = bootstrapping()
         if not nodeId:
             nodeId = self._generate_nodeId()
             
@@ -122,7 +123,9 @@ class P2PNode(object):
         if know_host:
             self.sys_dht = P2PDHT(host, port + 1, know_host, know_port + 1)
         else:
-            self.sys_dht = P2PDHT(host, port + 1)
+			know_host = 'bootdns'
+			know_port = 30000
+            self.sys_dht = P2PDHT(host, port + 1, know_host, know_port + 1)
         self.server_thread = threading.Thread(target=self.request_server.serve_forever)
         self.server_thread.daemon = True
         self.server_thread.start()
