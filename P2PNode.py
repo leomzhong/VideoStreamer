@@ -11,6 +11,7 @@ from P2PDHT import P2PDHT
 from P2PMessage import Message
 from P2PMessage import loadMessage
 from P2PStreamServer import StreamServer
+from P2PStreamClient import StreamClient
 from pprint import pprint
 from Bootstrapping import bootstrapping
 nodeIdMax = 1000
@@ -398,7 +399,11 @@ class P2PNode(object):
             print "getMovieStream: Failed to send out the request message"
             return False
         else:
-            print "[DBG_getMovieStream]: Message sent to:  " + chosen_node.getname() 
+            print "[DBG_getMovieStream]: Message sent to:  " + chosen_node.getname()
+
+        # Lets start the client side streamign stuff 
+        streamClient = StreamClient(myip, int(port), movie_name, int(start_pos))
+        streamClient.startReceiving() 
 
         # TODO: Do we need to get some reply back?
         return True
