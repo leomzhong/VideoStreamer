@@ -16,4 +16,16 @@ class Message:
         result += "source_id:" + str(self.source_id) + "\n"
         result += "flag:" + str(self.flag) + "\n"
         result += "payload:" + str(self.payload) + "\n"
-        return result 
+        return result
+    
+    def getPayLoad(self):
+        return self.payload
+
+    def getFlag(self):
+        return self.flag
+
+    def getSource(self):
+        return self.source_id
+
+    def getMessageType(self):
+        return self.message_type

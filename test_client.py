@@ -46,7 +46,7 @@ def main(sys_args):
         elif message_type == "getnodemovie":
             print("movies on mynode is:" + "\t".join(p2pnode.getMoviesOnANode(p2pnode.mynode.nodeId)))
         elif message_type == "streammovie":
-            p2pnode.getMovieStream(words[0])
+            p2pnode.getMovieStream(words[0], 0, words[1], words[2]) #0 for starting position
         elif command == "message":
             message = Message(message_type, p2pnode.mynode.nodeId, payload = s)
             p2pnode._send_message_by_id(nodeId, message)
