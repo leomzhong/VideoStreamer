@@ -105,7 +105,7 @@ class P2PNode(object):
     
     # Start procedure:  
     def __init__(self, host, port, nodeId=None, know_host=None, know_port=0):
-	boot = bootstrapping()
+	#boot = bootstrapping()
         if not nodeId:
             nodeId = self._generate_nodeId()
             
@@ -123,9 +123,10 @@ class P2PNode(object):
         if know_host:
             self.sys_dht = P2PDHT(host, port + 1, know_host, know_port + 1)
         else:
-	    know_host = 'bootdns'
-	    know_port = 30000
-            self.sys_dht = P2PDHT(host, port + 1, know_host, know_port + 1)
+	    #know_host = 'bootdns'
+	    #know_port = 30000
+            #self.sys_dht = P2PDHT(host, port + 1, know_host, know_port + 1)
+             self.sys_dht = P2PDHT(host, port + 1)
         self.server_thread = threading.Thread(target=self.request_server.serve_forever)
         self.server_thread.daemon = True
         self.server_thread.start()
