@@ -1,5 +1,4 @@
 import sys, os
-import pygtk
 import gi
 gi.require_version('Gst', '1.0')
 from gi.repository import GObject, Gst, Gtk, Gdk
@@ -7,7 +6,7 @@ from gi.repository import GObject, Gst, Gtk, Gdk
 class StreamServer:
     
     def __init__(self, client_ip, client_base_port=5000, filename="/home/ankur/ROUND1.MPG", fileoffset=0):
-        print "[DBG_Streamserver] Init enter with Args, client_ip: " + client_ip + ", client_base_port: " + str(client_base_port) + ", filename: " + filename + ", fileoffset: " + str(fileoffset)
+        print("[DBG_Streamserver] Init enter with Args, client_ip: " + client_ip + ", client_base_port: " + str(client_base_port) + ", filename: " + filename + ", fileoffset: " + str(fileoffset))
         self.client_ip, self.client_base_port, self.filename, self.fileoffset = client_ip, client_base_port, filename, fileoffset
         self.client_port1 = client_base_port   #5000
         self.client_port2 = client_base_port+1 #5001
@@ -41,9 +40,9 @@ class StreamServer:
 
         self.server_str += " rtpbin.recv_rtcp_sink_1"
 
-        print "[DBG_Streamserver] client_port1: " + str(self.client_port1) + ", client_port2: " + str(self.client_port2) + ", client_port3: " + str(self.client_port3)
-        print "[DBG_Streamserver] client_port4: " + str(self.client_port4) + ", host_port1: " + str(self.host_port1) + ", host_port2: " + str(self.host_port2)
-        print "[DBG_Streamserver] server_str:\n" + self.server_str 
+        print("[DBG_Streamserver] client_port1: " + str(self.client_port1) + ", client_port2: " + str(self.client_port2) + ", client_port3: " + str(self.client_port3))
+        print("[DBG_Streamserver] client_port4: " + str(self.client_port4) + ", host_port1: " + str(self.host_port1) + ", host_port2: " + str(self.host_port2))
+        print("[DBG_Streamserver] server_str:\n" + self.server_str) 
 
         Gst.init([])
     

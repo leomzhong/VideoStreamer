@@ -17,14 +17,14 @@ def main(sys_args):
     p2pnode = P2PNode(hostname, hostport, know_host=knowhost, know_port = knowport)
     
     while True:
-        command = raw_input("enter command:")
+        command = input("enter command:")
         if command == "message":
-            nodeId = int(raw_input("enter nodeId:"))
-            message_type = raw_input("enter message_type:")
-            s = raw_input("enter the message:")
+            nodeId = int(input("enter nodeId:"))
+            message_type = input("enter message_type:")
+            s = input("enter the message:")
         else:
             message_type = command
-            s = raw_input("enter arguments:")
+            s = input("enter arguments:")
             words = s.split()
         
         # Testing getload function
@@ -39,12 +39,12 @@ def main(sys_args):
             p2pnode.removeMovie(s)
         # Testing get movie list:
         elif message_type == "getmovies":
-            print("movies:" + "\t".join(p2pnode.getMovieList()))
+            print(("movies:" + "\t".join(p2pnode.getMovieList())))
         # Testing get node list of a movie
         elif message_type == "getmovienode":
-            print("nodes for movie " + s + ":" + "\t".join(p2pnode.getNodeListOfMovie(s)))
+            print(("nodes for movie " + s + ":" + "\t".join(p2pnode.getNodeListOfMovie(s))))
         elif message_type == "getnodemovie":
-            print("movies on mynode is:" + "\t".join(p2pnode.getMoviesOnANode(p2pnode.mynode.nodeId)))
+            print(("movies on mynode is:" + "\t".join(p2pnode.getMoviesOnANode(p2pnode.mynode.nodeId))))
         elif message_type == "streammovie":
             p2pnode.getMovieStream(words[0], 0, words[1], words[2]) #0 for starting position
         elif command == "message":

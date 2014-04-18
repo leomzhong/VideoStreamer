@@ -1,10 +1,11 @@
 import pickle
+import jsonpickle
 
 from P2PMessage import Message
 
 
 def loadNode(encoded):
-    return pickle.loads(str(encoded))
+    return jsonpickle.decode(encoded)
 
 class ClientNode(object):
     
@@ -29,13 +30,13 @@ class ClientNode(object):
         return "nodename" + str(self.nodeId)
     
     def dump(self):
-        return pickle.dumps(self)
+        return jsonpickle.encode(self)
     
     def binarySearch(self, machine_list, target_nodeId):
         l = 0
         r = len(machine_list) - 1
         while l <= r:
-            mid = l + (r - l) / 2
+            mid = l + (r - l) // 2
             if loadNode(machine_list[mid]).nodeId == target_nodeId:
                 return mid
             elif loadNode(machine_list[mid]).nodeId > target_nodeId:
@@ -64,10 +65,10 @@ class ClientNode(object):
         if index != -1 and loadNode(machine_list[index]).nodeId == self.nodeId:
             machine_list.pop(index) 
         else:
-            print "removeFromList: you are not in the list!!!"   
+            print("removeFromList: you are not in the list!!!")   
     
     def _sendmessage(self, message, sock=None, lock=None):
-        encoded = message.dump()
+        encoded = bytes(message.dump(), 'UTF-8')
         if lock:
             lock.acquire()
             sock.sendto(encoded, self.address())

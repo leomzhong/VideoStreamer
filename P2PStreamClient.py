@@ -1,13 +1,9 @@
-import sys, os
-import pygtk
-import gi
-gi.require_version('Gst', '1.0')
-from gi.repository import GObject, Gst, Gtk, Gdk
+from P2PStreamClientGUI import PlaybackInterface
 
 class StreamClient:
     
     def __init__(self, client_ip, client_base_port, filename, fileoffset):
-        print "[DBG_Streamclient] Init enter with Args, client_ip: " + client_ip + ", client_base_port: " + str(client_base_port) + ", filename: " + filename + ", fileoffset: " + str(fileoffset)
+        print("[DBG_Streamclient] Init enter with Args, client_ip: " + client_ip + ", client_base_port: " + str(client_base_port) + ", filename: " + filename + ", fileoffset: " + str(fileoffset))
         self.client_ip, self.client_base_port, self.filename, self.fileoffset = client_ip, client_base_port, filename, fileoffset
         self.client_port1 = client_base_port   #5000
         self.client_port2 = client_base_port+1 #5001
@@ -28,13 +24,13 @@ class StreamClient:
 
         self.client_str += "rtpbin.recv_rtcp_sink_1 rtpbin.send_rtcp_src_1 ! udpsink port="+ str(self.host_port2)  + " sync=false async=false"
 
-        print "[DBG_Streamclient] client_port1: " + str(self.client_port1) + ", client_port2: " + str(self.client_port2) + ", client_port3: " + str(self.client_port3)
-        print "[DBG_Streamclient] client_port4: " + str(self.client_port4) + ", host_port1: " + str(self.host_port1) + ", host_port2: " + str(self.host_port2)
-        print "[DBG_Streamclient] client_str:\n" + self.client_str
+        print("[DBG_Streamclient] client_port1: " + str(self.client_port1) + ", client_port2: " + str(self.client_port2) + ", client_port3: " + str(self.client_port3))
+        print("[DBG_Streamclient] client_port4: " + str(self.client_port4) + ", host_port1: " + str(self.host_port1) + ", host_port2: " + str(self.host_port2))
+        print("[DBG_Streamclient] client_str:\n" + self.client_str)
 
-        Gst.init([])
 
     def startReceiving(self):
-        print "[DBG_Streamclient] start receiving"
-        self.player = Gst.parse_launch(self.client_str);
-        self.player.set_state(Gst.State.PLAYING) 
+        print("[DBG_Streamclient] start receiving")
+        PlaybackInterface(self.client_str) # Add size of file parameter here as well.
+#        self.player = Gst.parse_launch(self.client_str);
+#        self.player.set_state(Gst.State.PLAYING) 

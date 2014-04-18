@@ -47,7 +47,7 @@ class P2PDHT:
             return True
         
     def remove(self, key):
-        if not self.has_key(key):
+        if key not in self:
             return
         else:
             self.dht_lock.acquire()
