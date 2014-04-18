@@ -1,3 +1,15 @@
+To Run with Python 3.3
+
+1. Install Python 3.3
+
+2. In the uploaded pydht directory run sudo python3 setup.py install. This will install the library for your local python3 folder.
+
+3. You may require additional libraries such as jsonpickle, Gst, GObject, Gtk. This can be done using easyinstall3.
+
+4. Run the videostreamer as given below just change the python to python3 in the commandline.
+
+
+
 VideoStreamer
 =============
 
